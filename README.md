@@ -11,6 +11,7 @@
 3. [Model Architectures](#3-model-architectures)
    - [A1 — LSTM Decoder](#a1--lstm-decoder)
    - [A2 — Transformer Decoder](#a2--transformer-decoder)
+   - [B1 — Zero-shot Qwen2-VL](#b1--zero-shot-qwen2-vl)
    - [B2 — QLoRA Fine-tuning (Qwen2-VL)](#b2--qlora-fine-tuning-qwen2-vl)
 4. [Architecture Diagrams](#4-architecture-diagrams)
 5. [Training Methods](#5-training-methods)
@@ -37,6 +38,7 @@ Two complementary approaches are explored:
 |--------|----------|----------|
 | **A1** | `Train_A1_A2.ipynb` | Custom encoder-fusion-decoder (LSTM) trained from scratch |
 | **A2** | `Train_A1_A2.ipynb` | Custom encoder-fusion-decoder (Transformer) trained from scratch |
+| **B1** | `B1_Model_with_checkpoint.ipynb` | Zero-shot inference with `Qwen2-VL-2B-Instruct` — no fine-tuning |
 | **B2** | `Train_B2.ipynb` | QLoRA fine-tuning of pretrained `Qwen2-VL-2B-Instruct` |
 
 ---
@@ -107,6 +109,34 @@ fused = LayerNorm(attn·V + text_feats)   ← residual connection
 |--------|---------|---------|
 | **A1** | `nn.LSTM` | Hidden state `h₀` initialized from `mean_pool(fused_features)`; auto-regressive token generation |
 | **A2** | `nn.TransformerDecoder` | 3 layers, 8 attention heads, causal mask to prevent future token leakage |
+
+---
+
+### B1 — Zero-shot Qwen2-VL
+
+B1 uses the **same base model as B2** (`Qwen2-VL-2B-Instruct`) but performs **pure zero-shot inference** — no training, no fine-tuning, no LoRA. This serves as the baseline to measure how much fine-tuning (B2) actually gains over the out-of-the-box model.
+
+#### Base Model
+[`Qwen/Qwen2-VL-2B-Instruct`](https://huggingface.co/Qwen/Qwen2-VL-2B-Instruct) — loaded in `bfloat16`, `device_map="auto"`.
+
+#### Local Caching Strategy
+To avoid re-downloading the model on every run, B1 implements a simple checkpoint-to-Drive strategy:
+- **First run:** downloads from HuggingFace and saves to `LOCAL_MODEL_DIR` on Google Drive.
+- **Subsequent runs:** loads directly from local — no internet required.
+
+```python
+LOCAL_MODEL_DIR = "/content/drive/MyDrive/B1_checkpoint/Qwen2VL"
+```
+
+#### Prompt Format
+
+```
+User: <image>
+      Dựa vào biểu đồ, hãy trả lời câu hỏi sau một cách chính xác
+      và ngắn gọn nhất (dưới 10 từ) bằng tiếng Việt: {question}
+```
+
+No system prompt — single-turn, greedy decoding (`max_new_tokens=15`).
 
 ---
 
@@ -187,6 +217,19 @@ Input Question ──► PhoBERT-base ──► text hidden states ──► [ty
                                                            │
                                                            ▼
                                                    Generated Answer (Vietnamese)
+```
+
+### B1 Pipeline
+
+```
+Input Image ───────────────────────────────────────────┐
+                                                        ▼
+Zero-shot Prompt + Question ──► Tokenizer + Processor ──► Qwen2-VL-2B-Instruct
+                                                           (bfloat16, no adapters)
+                                                           │
+                                                           ▼
+                                                    Generated Answer
+                                                    (greedy, max_new_tokens=15)
 ```
 
 ### B2 Pipeline
@@ -288,6 +331,7 @@ Text normalization for B2 includes lowercasing, whitespace normalization, and re
 |--------|----|----------|------|---------|--------------|
 | A1 (LSTM) | — | — | — | — | — |
 | A2 (Transformer) | — | — | — | — | — |
+| B1 (Zero-shot Qwen2-VL) | — | — | — | — | — |
 | B2 (QLoRA Qwen2-VL) | — | — | — | — | — |
 
 ### Per-Chart-Type Breakdown (B2)
@@ -309,7 +353,7 @@ Text normalization for B2 includes lowercasing, whitespace normalization, and re
 pip install datasets evaluate bert_score rouge-score nltk
 pip install torch transformers
 
-# For B2 (additional)
+# For B1 / B2 (additional)
 pip install transformers accelerate peft bitsandbytes qwen-vl-utils
 ```
 
@@ -318,6 +362,7 @@ pip install transformers accelerate peft bitsandbytes qwen-vl-utils
 | Config | Recommended GPU | VRAM |
 |--------|----------------|------|
 | A1 / A2 | Any CUDA GPU | ≥ 8 GB |
+| B1 | Any CUDA GPU | ≥ 8 GB (inference only) |
 | B2 | NVIDIA T4 (or better) | ≥ 16 GB |
 
 ### Google Drive Setup
@@ -328,6 +373,9 @@ All notebooks assume a mounted Google Drive. Paths:
 # A1 / A2
 PROJECT_PATH = "/content/drive/MyDrive/VQA_Chart_Project/v2"
 
+# B1
+LOCAL_MODEL_DIR = "/content/drive/MyDrive/B1_checkpoint/Qwen2VL"
+
 # B2
 DRIVE_DIR = "/content/drive/MyDrive/B2_Qwen2VL_VQA_Charts"
 ```
@@ -337,6 +385,25 @@ Ensure the above directories exist, or they will be created automatically on fir
 ---
 
 ## 9. How to Run
+
+### B1 (`B1_Model_with_checkpoint.ipynb`)
+
+Open the notebook in **Google Colab** and run cells sequentially:
+
+```
+Step 0 → Mount Google Drive          (Cell 0: drive.mount)
+Step 1 → Install libraries           (Cell 1: pip install ...)
+Step 2 → Imports & path config       (Cell 2: LOCAL_MODEL_DIR, HF_MODEL_ID)
+Step 3 → Download & cache model      (Cell 3: auto-skipped if already cached)
+Step 4 → Load model from local       (Cell 4: from_pretrained(LOCAL_MODEL_DIR))
+Step 5 → Load dataset                (Cell 5: load_dataset)
+Step 6 → Define inference function   (Cell 6: get_zero_shot_prediction)
+Step 7 → Run demo on samples         (Cell 7: loop over NUM_DEMO samples)
+```
+
+> **Cell 3 is safe to re-run** — it checks `os.path.exists(LOCAL_MODEL_DIR)` before downloading and skips automatically if the model is already cached on Drive.
+
+---
 
 ### A1 / A2 (`Train_A1_A2.ipynb`)
 
@@ -414,9 +481,10 @@ B2_Qwen2VL_VQA_Charts/
 
 ```
 .
-├── Train_A1_A2.ipynb     # Custom encoder–fusion–decoder (A1: LSTM, A2: Transformer)
-├── Train_B2.ipynb        # QLoRA fine-tuning of Qwen2-VL-2B-Instruct (B2)
-└── README.md             # This file
+├── Train_A1_A2.ipynb              # Custom encoder–fusion–decoder (A1: LSTM, A2: Transformer)
+├── B1_Model_with_checkpoint.ipynb # Zero-shot inference with Qwen2-VL-2B-Instruct
+├── Train_B2.ipynb                 # QLoRA fine-tuning of Qwen2-VL-2B-Instruct (B2)
+└── README.md                      # This file
 
 # Generated at runtime (Google Drive):
 VQA_Chart_Project/v2/
@@ -471,6 +539,7 @@ VQA_Chart_Project/v2/
 
 ## Notes
 
+- **B1** is a pure **zero-shot baseline** — the model receives no task-specific training. It uses a single-turn prompt with `max_new_tokens=15` and greedy decoding. Comparing B1 vs B2 directly shows the gain from QLoRA fine-tuning on this dataset.
 - **A1 / A2** use **teacher forcing** during training but **auto-regressive greedy decoding** during inference.
 - **B2** uses **greedy decoding** (`do_sample=False`) at inference for reproducibility.
 - For A2, the Encoder/Classifier weights are **transferred from A1's Phase 1** checkpoint (`strict=False`), so only the Transformer Decoder learns from scratch in Phase 2.
