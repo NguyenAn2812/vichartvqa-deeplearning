@@ -45,17 +45,21 @@ Two complementary approaches are explored:
 
 **Source:** [`Zenng2812/vqa-vietnamese-charts`](https://huggingface.co/datasets/Zenng2812/vqa-vietnamese-charts) (Hugging Face)
 
+> 📦 **This dataset was created by our team** as part of this project. It is an AI-assisted pipeline that automatically generates chart images, Vietnamese analytical questions, and trend-descriptive answers — covering 4 chart types: Bar, Line, Area, and Pie. The dataset is publicly available on HuggingFace Hub and was split 80/10/10 by chart (not by QA pair) to prevent data leakage.
+>
+> 📄 For full details on how the dataset was built — including the generation pipeline, LLM prompting strategy, normalization, and export steps — see the dedicated documentation **[here](dataset/README.md)**.
+
 Each sample contains:
 - `image` — A chart image (PIL format)
 - `question` — A Vietnamese question about the chart
 - `answer` — The ground-truth Vietnamese answer
-- `chart_type` — Chart category label (e.g., bar, line, pie, …)
+- `chart_type` — Chart category label (`bar`, `line`, `area`, `pie`)
 
-| Split | Samples |
-|-------|---------|
-| Train | *loaded dynamically* |
-| Validation | *loaded dynamically* |
-| Test | *loaded dynamically* |
+| Split | Ratio | Note |
+|-------|-------|------|
+| Train | 80% | Used for vocabulary building & training |
+| Validation | 10% | Used for checkpoint selection |
+| Test | 10% | Used for final evaluation |
 
 > **Answer vocabulary (A1/A2):** Built from the top-1000 most frequent words in the training answers, plus 4 special tokens: `<PAD>`, `<SOS>`, `<EOS>`, `<UNK>`.
 
@@ -471,4 +475,4 @@ VQA_Chart_Project/v2/
 - **B2** uses **greedy decoding** (`do_sample=False`) at inference for reproducibility.
 - For A2, the Encoder/Classifier weights are **transferred from A1's Phase 1** checkpoint (`strict=False`), so only the Transformer Decoder learns from scratch in Phase 2.
 - BERTScore for B2 uses `xlm-roberta-base` instead of a Vietnamese-specific model for better stability on T4.
-- Best model weights for A1/A2 are saved in **FP16** (half precision) to reduce checkpoint file size."# vichartvqa-deeplearning" 
+- Best model weights for A1/A2 are saved in **FP16** (half precision) to reduce checkpoint file size.
