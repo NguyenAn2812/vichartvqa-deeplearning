@@ -9,7 +9,7 @@ Trường Đại học Tôn Đức Thắng — Khoa Công nghệ Thông tin
 |---|---|
 | Nguyễn Trần Nhật An | 523H0115 |
 | Chung Quang Vũ | 523H0196 |
-| Nguyễn Nhật Chiều | 522H0133 |
+| Nguyễn Nhật Chiêu | 522H0133 |
 
 ---
 
@@ -147,4 +147,4 @@ PhoBERT-base-v2 (Encoder)
 
 ## 📄 License
 
-Dự án phục vụ mục đích học thuật — **Tôn Đức Thắng University, 2026**.
+Dự án phục vụ mục đích học thuật cuối kỳ Deep Learning— **Tôn Đức Thắng University, 2026**.
