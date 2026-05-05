@@ -27,6 +27,9 @@ Dự án fine-tune mô hình **PhoBERT-base-v2** trên bộ dữ liệu **UIT-VS
 | 😲 Surprise | Ngạc nhiên |
 | 😐 Other | Khác |
 
+> Dataset: [tridm/UIT-VSMEC](https://huggingface.co/datasets/tridm/UIT-VSMEC)
+
+> Model checkpoint được lưu tại HuggingFace Hub: [RudiChill/vismec-emotion](https://huggingface.co/RudiChill/vismec-emotion)
 ---
 
 ## 🗂️ Cấu trúc dự án
