@@ -1,150 +1,122 @@
-# 🇻🇳 Vietnamese Emotion Recognition — UIT-VSMEC
 
-> Fine-tuned **PhoBERT-base-v2** for 7-class emotion classification on Vietnamese social media text.
+# Deep Learning Final Project
 
-**Task 2 — Deep Learning Final Project**  
-Trường Đại học Tôn Đức Thắng — Khoa Công nghệ Thông tin
+This repository contains the final project submission for the **Deep Learning** course.  
+The project is divided into two independent tasks, following the course requirements: a major Visual Question Answering task and an additional deep learning application task.
 
-| Thành viên | MSSV |
-|---|---|
-| Nguyễn Trần Nhật An | 523H0115 |
-| Chung Quang Vũ | 523H0196 |
-| Nguyễn Nhật Chiêu | 522H0133 |
+The course project requires students to design, implement, evaluate, and demonstrate deep learning systems, including dataset preparation, model development, experimental comparison, and final reporting. The first task focuses on Vietnamese Visual Question Answering with both custom and pretrained multimodal models, while the second task allows students to propose and implement another interesting deep learning problem. The expected submission includes source code, detailed README files, report, slides, demo video, dataset, and model checkpoints.  
 
----
+## Repository Structure
 
-## 📌 Tổng quan
-
-Dự án fine-tune mô hình **PhoBERT-base-v2** trên bộ dữ liệu **UIT-VSMEC** để phân loại cảm xúc trong văn bản mạng xã hội tiếng Việt thành 7 nhãn:
-
-| Nhãn | Cảm xúc |
-|---|---|
-| 😊 Enjoyment | Vui vẻ |
-| 😢 Sadness | Buồn bã |
-| 😡 Anger | Tức giận |
-| 🤢 Disgust | Ghê tởm |
-| 😨 Fear | Sợ hãi |
-| 😲 Surprise | Ngạc nhiên |
-| 😐 Other | Khác |
-
----
-
-## 🗂️ Cấu trúc dự án
-
-```
-Vietnamese_Emotion_Recognition/
-├── Vietnamese_Emotion_Recognition.ipynb   # Notebook chính
-├── checkpoints/
-│   └── best_model.pt                      # Checkpoint tốt nhất (sinh ra sau training)
-├── saved_model/                           # Model + tokenizer đã lưu (sinh ra sau training)
-│   ├── config.json
-│   ├── tokenizer files...
-│   ├── classifier_head.pt
-│   └── emotion_config.json
-├── label_dist.png                         # Biểu đồ phân phối nhãn
-├── len_dist.png                           # Biểu đồ độ dài câu
-├── training_curves.png                    # Loss / Accuracy / F1 theo epoch
-├── confusion_matrix.png                   # Confusion matrix trên tập test
+```text
+.
+├── dataset/
+├── task1/
+│   ├── README.md
+│   ├── Train_A1_A2.ipynb
+│   ├── Train_B1.ipynb
+│   ├── Train_B2.ipynb
+│   ├── app.py
+│
+└── task2/
+│   ├── README.md
+│   ├── Vietnamese_Emotion_Recognition.ipynb
+│
 └── README.md
-```
+````
+## Dataset
 
----
+Folder: [`dataset`](dataset/)
 
-## 🚀 Hướng dẫn chạy
+## Task 1 — Vietnamese Chart Visual Question Answering
 
-### 1. Chạy trên Google Colab (khuyến nghị)
+Folder: [`task1`](task1/)
 
-[![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/nhatcheu/Vietnamese_Emotion_Recognition/blob/main/Vietnamese_Emotion_Recognition.ipynb)
+Task 1 implements a Vietnamese **Visual Question Answering (VQA)** system in a specialized domain. The system receives a chart image and a Vietnamese question, then generates a Vietnamese answer.
 
+This task follows the required experimental design of the course:
 
+| Configuration | Description                                             |
+| ------------- | ------------------------------------------------------- |
+| **A1**        | Custom multimodal architecture with LSTM decoder        |
+| **A2**        | Custom multimodal architecture with Transformer decoder |
+| **B1**        | Zero-shot pretrained multimodal model                   |
+| **B2**        | Fine-tuned pretrained multimodal model                  |
 
-### 2. Cài đặt thủ công
+The main purpose of Task 1 is to compare two development directions:
+
+1. **Custom multimodal architecture**
+   Using separate image encoder, text encoder, fusion module, and answer decoder.
+
+2. **Pretrained multimodal model adaptation**
+   Using a pretrained vision-language model in zero-shot and fine-tuned settings.
+
+The task includes dataset construction, training, evaluation, comparison, and a local demo interface.
+
+## Task 2 — Additional Deep Learning Application
+
+Folder: [`task2`](task2/)
+
+Task 2 presents an additional deep learning application selected by the project team.
+This task focuses on proposing a meaningful problem, explaining why deep learning is suitable for the task, implementing the solution, and providing a working demo.
+
+The folder contains the full implementation, experiment results, and usage instructions for this second task.
+
+## Main Requirements Covered
+
+This repository is designed to satisfy the course requirements, including:
+
+* Dataset preparation and documentation
+* Model implementation and training
+* Comparison between multiple model configurations
+* Evaluation using suitable automatic metrics
+* Experimental analysis and result visualization
+* Local or web-based demo interface
+* Checkpoint and dataset organization
+* Final report, slides, and demo video preparation
+
+## How to Use This Repository
+
+Each task has its own README file with detailed instructions.
+
+To start with Task 1:
 
 ```bash
-pip install transformers datasets tokenizers accelerate scikit-learn \
-            pandas numpy matplotlib seaborn huggingface_hub tqdm gradio
+cd Task_1_ChartVQA
 ```
 
-### 3. Luồng chạy notebook
+Then follow the instructions in:
 
-```
-Section 0  → Cài thư viện
-Section 1  → Import & cấu hình
-Section 2  → Load dataset UIT-VSMEC từ HuggingFace
-Section 3  → EDA (phân phối nhãn, độ dài câu)
-Section 4  → Tạo Dataset class & DataLoaders
-Section 5  → Định nghĩa model PhoBERTClassifier
-Section 5b → (TÙY CHỌN) Load checkpoint có sẵn từ HF Hub → bỏ qua Section 6
-Section 6  → Training (10 epochs, AdamW + Linear Warmup)
-Section 7  → Đánh giá trên tập test (F1-macro, Accuracy, Confusion Matrix)
-Section 8  → Inference demo với câu mẫu
-Section 9  → Lưu model & push lên HuggingFace Hub (Do đã push lên HuggingFace rồi -> người test vui lòng bỏ qua bước này (Section 9) và chạy tiếp Section 10)
-Section 10 → Gradio interactive demo
+```text
+Task_1_ChartVQA/README.md
 ```
 
----
+To start with Task 2:
 
-## 🏗️ Kiến trúc mô hình
-
-```
-Input Text (Vietnamese)
-       ↓
-PhoBERT-base-v2 (Encoder)
-       ↓
-  [CLS] token embedding (768-dim)
-       ↓
-  Dropout(0.3) → Linear(768→384) → ReLU → Dropout(0.15) → Linear(384→7)
-       ↓
-  Softmax → 7-class Emotion Label
+```bash
+cd Task_2_DeepLearning_Application
 ```
 
----
+Then follow the instructions in:
 
-## ⚙️ Cấu hình huấn luyện
+```text
+Task_2_DeepLearning_Application/README.md
+```
 
-| Tham số | Giá trị |
-|---|---|
-| Pretrained model | `vinai/phobert-base-v2` |
-| Max sequence length | 128 |
-| Epochs | 10 |
-| Batch size | 16 |
-| Learning rate | 2e-5 |
-| Warmup ratio | 0.1 |
-| Weight decay | 0.01 |
-| Optimizer | AdamW |
-| Loss function | CrossEntropyLoss |
+## Deliverables
 
----
+The complete submission includes:
 
-## 📊 Kết quả
+* Source code
+* Dataset documentation
+* Training and evaluation notebooks
+* Model checkpoints
+* Demo application
+* Final report
+* Presentation slides
+* Demo video
 
-| Metric      | Score  |
-|-------------|--------|
-| Accuracy    | 0.6566 |
-| F1-macro    | 0.6480 |
-| F1-weighted | 0.6594 |
+## Notes
 
-> Model checkpoint được lưu tại HuggingFace Hub: [RudiChill/vismec-emotion](https://huggingface.co/RudiChill/vismec-emotion)
-
----
-
-## 📦 Dataset
-
-- **Tên:** UIT-VSMEC
-- **Nguồn:** [tridm/UIT-VSMEC](https://huggingface.co/datasets/tridm/UIT-VSMEC) trên HuggingFace
-- **Số mẫu:** ~6,927 câu tiếng Việt từ mạng xã hội
-- **Phân chia:** Train / Validation / Test
-
----
-
-## 📚 Tham khảo
-
-- Nguyen, D. Q., et al. (2020). *PhoBERT: Pre-trained language models for Vietnamese.* EMNLP Findings.
-- Ho, V. A., et al. (2020). *Emotion Recognition for Vietnamese Social Media Text.* UIT-VSMEC dataset.
-- HuggingFace Transformers: https://huggingface.co/docs/transformers
-
----
-
-## 📄 License
-
-Dự án phục vụ mục đích học thuật cuối kỳ Deep Learning— **Tôn Đức Thắng University, 2026**.
+This repository is intended for academic use as part of the Deep Learning final project.
+Each task is organized independently to make the implementation, evaluation, and demo process easier to follow.
